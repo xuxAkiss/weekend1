@@ -532,11 +532,11 @@
 
     var prompt = "以下是 K-means 聚类从一张图片中提取的 " + centroids.length + " 种主色调：\n" +
       colorList + "\n\n" +
-      "请从色彩搭配的角度分析这组颜色是否和谐。包括：\n" +
+      "请从色彩搭配的角度简洁分析这组颜色是否和谐，控制在200字以内。包括：\n" +
       "1. 色相是否互补或协调\n" +
       "2. 饱和度和明度是否平衡\n" +
-      "3. 是否符合常见的配色法则（互补色、邻近色、三角色等）\n" +
-      "4. 给出整体和谐度评分（1-10分）和简短建议";
+      "3. 是否符合常见的配色法则\n" +
+      "4. 给出整体和谐度评分（1-10分）和一句话建议";
 
     fetch(endpoint, {
       method: "POST",
@@ -548,7 +548,7 @@
         model: model,
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
-        max_tokens: 600
+        max_tokens: 800
       })
     })
     .then(function (res) {
