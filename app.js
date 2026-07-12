@@ -25,6 +25,8 @@
   var resultBody     = document.getElementById("resultBody");
   var chartContainer = document.getElementById("chartContainer");
   var logCard        = document.getElementById("logCard");
+  var logTitle       = document.getElementById("logTitle");
+  var logBody        = document.getElementById("logBody");
   var logArea        = document.getElementById("logArea");
   var aiCard         = document.getElementById("aiCard");
   var aiEndpoint     = document.getElementById("aiEndpoint");
@@ -147,8 +149,10 @@
   function runClustering() {
     if (!imageImageData) return;
 
-    // 清空
+    // 清空并展开日志
     logArea.textContent = "";
+    logTitle.classList.remove("collapsed");
+    logBody.classList.remove("hidden");
     resultBody.innerHTML = "";
     aiResult.textContent = "";
     aiStatus.textContent = "";
@@ -603,6 +607,12 @@
       return;
     }
     runClustering();
+  });
+
+  // ==================== 日志折叠 ====================
+  logTitle.addEventListener("click", function () {
+    var collapsed = logTitle.classList.toggle("collapsed");
+    logBody.classList.toggle("hidden", collapsed);
   });
 
   // ==================== 窗口 resize ====================

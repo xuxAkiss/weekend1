@@ -42,6 +42,24 @@
       font-size: 18px; font-weight: 600; margin-bottom: 16px;
       padding-bottom: 10px; border-bottom: 2px solid #e8e8e8;
       display: flex; align-items: center; gap: 8px;
+      cursor: default;
+    }
+    .card-title.collapsible {
+      cursor: pointer; user-select: none;
+    }
+    .card-title.collapsible:hover { opacity: 0.75; }
+    .card-title .toggle-arrow {
+      margin-left: auto; font-size: 14px; transition: transform 0.25s;
+      color: #999;
+    }
+    .card-title.collapsed .toggle-arrow {
+      transform: rotate(-90deg);
+    }
+    .card-body-collapsible {
+      overflow: hidden; transition: max-height 0.3s ease;
+    }
+    .card-body-collapsible.hidden {
+      max-height: 0;
     }
     .card-title .step-badge {
       display: inline-flex; align-items: center; justify-content: center;
@@ -349,10 +367,15 @@
       <div class="ai-status" id="aiStatus"></div>
     </div>
 
-    <!-- ====== 运行日志 ====== -->
+    <!-- ====== 运行日志（可折叠） ====== -->
     <div class="card" id="logCard" style="display:none;">
-      <div class="card-title"><span class="step-badge">📋</span> 运行日志</div>
-      <div class="log-area" id="logArea"></div>
+      <div class="card-title collapsible collapsed" id="logTitle">
+        <span class="step-badge">📋</span> 运行日志
+        <span class="toggle-arrow">▼</span>
+      </div>
+      <div class="card-body-collapsible hidden" id="logBody">
+        <div class="log-area" id="logArea"></div>
+      </div>
     </div>
   </div>
 
