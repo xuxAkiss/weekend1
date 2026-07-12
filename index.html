@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图片颜色聚类 — K-means 色彩分析</title>
+  <!-- ECharts CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <style>
+    /* ========== 基础样式 ========== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Microsoft YaHei", sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+      color: #333;
+    }
+
+    .container { max-width: 900px; width: 100%; }
+
+    h1 {
+      text-align: center; font-size: 28px;
+      margin-bottom: 8px; color: #1a1a2e;
+    }
+    .subtitle {
+      text-align: center; font-size: 14px;
+      color: #888; margin-bottom: 32px;
+    }
+
+    /* ========== 卡片 ========== */
+    .card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 28px 32px; margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px; font-weight: 600; margin-bottom: 16px;
+      padding-bottom: 10px; border-bottom: 2px solid #e8e8e8;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title .step-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #4a6cf7; color: #fff;
+      font-size: 14px; font-weight: 700;
+    }
+    .card-hint {
+      margin-top: 8px; font-size: 12px; color: #aaa;
+    }
+
+    /* ========== 上传区域 ========== */
+    .upload-area {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .file-label {
+      display: inline-block; padding: 12px 28px;
+      background: #4a6cf7; color: #fff; border-radius: 8px;
+      cursor: pointer; font-size: 15px; font-weight: 500;
+      transition: background 0.2s;
+    }
+    .file-label:hover { background: #3b5de7; }
+
+    #fileInput { display: none; }
+
+    .file-name {
+      font-size: 14px; color: #999; max-width: 300px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* 拖拽上传区 */
+    .drop-zone {
+      margin-top: 16px;
+      border: 2px dashed #d0d0d0;
+      border-radius: 10px;
+      padding: 32px;
+      text-align: center;
+      color: #aaa;
+      font-size: 14px;
+      transition: border-color 0.25s, background 0.25s;
+    }
+    .drop-zone.drag-over {
+      border-color: #4a6cf7;
+      background: rgba(74,108,247,0.05);
+      color: #4a6cf7;
+    }
+
+    /* ========== 预览 ========== */
+    .preview-row {
+      display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;
+    }
+    .preview-box { text-align: center; }
+    .preview-box canvas {
+      max-width: 300px; max-height: 250px;
+      border: 1px solid #e8e8e8; border-radius: 8px;
+      background: repeating-conic-gradient(#f0f0f0 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+    }
+    .preview-label { font-size: 13px; color: #888; margin-top: 6px; }
+
+    /* ========== 控制栏 ========== */
+    .controls {
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    }
+    .control-group {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .control-group label {
+      font-size: 14px; font-weight: 500; white-space: nowrap;
+    }
+    .control-group input[type="number"] {
+      width: 72px; padding: 8px 10px;
+      border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 14px; text-align: center;
+    }
+    .control-group input[type="range"] {
+      width: 140px; accent-color: #4a6cf7;
+    }
+    .control-group select {
+      padding: 8px 10px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 14px; background: #fff;
+    }
+
+    .btn {
+      padding: 10px 28px; border: none; border-radius: 8px;
+      font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: #4a6cf7; color: #fff; }
+    .btn-primary:hover { background: #3b5de7; }
+    .btn-primary:disabled { background: #c0c0c0; cursor: not-allowed; }
+
+    .btn-outline {
+      background: #fff; color: #4a6cf7;
+      border: 2px solid #4a6cf7; padding: 8px 20px;
+    }
+    .btn-outline:hover { background: #4a6cf7; color: #fff; }
+    .btn-outline.active {
+      background: #4a6cf7; color: #fff;
+    }
+
+    /* ========== 图表类型按钮组 ========== */
+    .chart-type-bar {
+      display: flex; gap: 6px; margin-bottom: 16px;
+    }
+    .chart-type-btn {
+      padding: 8px 18px; border: 2px solid #e0e0e0;
+      border-radius: 8px; background: #fff; color: #666;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chart-type-btn:hover { border-color: #4a6cf7; color: #4a6cf7; }
+    .chart-type-btn.active {
+      border-color: #4a6cf7; background: #4a6cf7; color: #fff;
+    }
+
+    /* ========== 结果表格 ========== */
+    .result-table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+    }
+    .result-table th, .result-table td {
+      padding: 12px 16px; border-bottom: 1px solid #f0f0f0; text-align: center;
+    }
+    .result-table th {
+      background: #fafafa; font-weight: 600; color: #555; white-space: nowrap;
+    }
+    .result-table .color-swatch {
+      display: inline-block; width: 32px; height: 32px;
+      border-radius: 6px; border: 1px solid #ccc;
+      vertical-align: middle; margin-right: 6px;
+    }
+
+    /* 占比图进度条 */
+    .cluster-bar-wrap {
+      background: #e8e8e8; border-radius: 3px; height: 18px;
+      width: 120px; display: inline-block; vertical-align: middle;
+      overflow: hidden; text-align: left;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .cluster-bar-fill {
+      display: inline-block; height: 100%; border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.12); box-sizing: border-box;
+      background-image: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.35) 0%,
+        rgba(255,255,255,0.05) 40%,
+        rgba(0,0,0,0.05) 60%,
+        rgba(0,0,0,0.2) 100%
+      );
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* ========== ECharts 容器 ========== */
+    .chart-container {
+      width: 100%; max-width: 600px; height: 400px; margin: 24px auto 0;
+    }
+
+    /* ========== AI 卡片 ========== */
+    .ai-config-row {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;
+    }
+    .ai-field { display: flex; flex-direction: column; gap: 4px; }
+    .ai-field label { font-size: 12px; color: #888; font-weight: 500; }
+    .ai-field input {
+      padding: 8px 10px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 13px; width: 200px;
+    }
+    .ai-result-box {
+      margin-top: 14px; background: #f7f8fa; border-radius: 8px;
+      padding: 18px 20px; font-size: 14px; line-height: 1.8;
+      color: #444; min-height: 40px; white-space: pre-wrap;
+    }
+    .ai-status { font-size: 13px; color: #888; margin-top: 6px; }
+
+    /* ========== 日志 ========== */
+    .log-area {
+      background: #1e1e1e; color: #d4d4d4; border-radius: 8px;
+      padding: 16px 20px; font-family: "Cascadia Code","Fira Code","JetBrains Mono",monospace;
+      font-size: 13px; line-height: 1.7; max-height: 280px;
+      overflow-y: auto; white-space: pre-wrap; word-break: break-word;
+    }
+
+    /* ========== 响应式 ========== */
+    @media (max-width: 600px) {
+      .card { padding: 18px 16px; }
+      .preview-row { flex-direction: column; align-items: center; }
+      .controls { flex-direction: column; align-items: flex-start; }
+      .ai-field input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 图片颜色聚类分析</h1>
+    <p class="subtitle">基于 K-means 算法 · RGB / LAB 色彩空间 · 纯前端 + AI 辅助</p>
+
+    <!-- ====== 步骤 1：上传图片 ====== -->
+    <div class="card">
+      <div class="card-title"><span class="step-badge">1</span> 上传图片</div>
+      <div class="upload-area">
+        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/bmp">
+        <label for="fileInput" class="file-label">📁 选择图片</label>
+        <span class="file-name" id="fileName">尚未选择文件</span>
+      </div>
+      <!-- 拖拽上传区 -->
+      <div class="drop-zone" id="dropZone">
+        📂 或将图片拖拽到此处
+      </div>
+      <p class="card-hint">支持 PNG / JPEG / WebP / BMP，图片仅在前端处理，不会上传到任何服务器。</p>
+    </div>
+
+    <!-- ====== 步骤 2：图片预览 ====== -->
+    <div class="card" id="previewCard" style="display:none;">
+      <div class="card-title"><span class="step-badge">2</span> 图片预览</div>
+      <div class="preview-row">
+        <div class="preview-box">
+          <canvas id="sourceCanvas" style="display:none;"></canvas>
+          <canvas id="previewCanvas"></canvas>
+          <div class="preview-label">原图预览</div>
+        </div>
+        <div style="font-size:13px;color:#888;line-height:1.8;" id="imageInfo"></div>
+      </div>
+    </div>
+
+    <!-- ====== 步骤 3：聚类参数 ====== -->
+    <div class="card" id="controlCard" style="display:none;">
+      <div class="card-title"><span class="step-badge">3</span> 聚类参数</div>
+      <div class="controls">
+        <div class="control-group">
+          <label for="kValue">K 值（聚类数）：</label>
+          <input type="range" id="kSlider" value="5" min="2" max="16" step="1">
+          <input type="number" id="kValue" value="5" min="2" max="16" step="1">
+        </div>
+        <div class="control-group">
+          <label for="maxIter">最大迭代：</label>
+          <input type="number" id="maxIter" value="20" min="5" max="200" step="1">
+        </div>
+        <div class="control-group">
+          <label for="colorSpaceSel">色彩空间：</label>
+          <select id="colorSpaceSel">
+            <option value="rgb">RGB 空间</option>
+            <option value="lab">LAB 空间（感知均匀）</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="runBtn">🚀 执行聚类</button>
+      </div>
+    </div>
+
+    <!-- ====== 步骤 4：聚类结果 ====== -->
+    <div class="card" id="resultCard" style="display:none;">
+      <div class="card-title"><span class="step-badge">4</span> 聚类结果</div>
+
+      <!-- 图表类型切换 -->
+      <div class="chart-type-bar">
+        <button class="chart-type-btn active" data-type="pie">🥧 饼图</button>
+        <button class="chart-type-btn" data-type="bar">📊 柱状图</button>
+        <button class="chart-type-btn" data-type="rose">🌹 玫瑰图</button>
+      </div>
+
+      <!-- 结果表格 -->
+      <table class="result-table" id="resultTable">
+        <thead>
+          <tr>
+            <th>类簇</th><th>色块</th><th>RGB</th>
+            <th>Hex</th><th>像素数量</th><th>占比</th><th>占比图</th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+
+      <!-- ECharts 图表容器 -->
+      <div class="chart-container" id="chartContainer"></div>
+    </div>
+
+    <!-- ====== 步骤 5：AI 色彩和谐度分析 ====== -->
+    <div class="card" id="aiCard" style="display:none;">
+      <div class="card-title"><span class="step-badge">🤖</span> AI 色彩和谐度分析</div>
+      <p style="font-size:13px;color:#999;margin-bottom:14px;">
+        调用大语言模型判断聚类出的颜色搭配是否和谐。API Key 仅保存在浏览器本地。
+      </p>
+      <div class="ai-config-row">
+        <div class="ai-field">
+          <label>API 地址</label>
+          <input type="text" id="aiEndpoint"
+            value="https://api.closeai-asia.com/v1/chat/completions"
+            placeholder="https://api.xxx.com/v1/chat/completions">
+        </div>
+        <div class="ai-field">
+          <label>API Key</label>
+          <input type="password" id="aiKey" placeholder="sk-...">
+        </div>
+        <div class="ai-field">
+          <label>模型</label>
+          <input type="text" id="aiModel" value="gpt-4o" placeholder="gpt-4o">
+        </div>
+        <button class="btn btn-primary" id="aiRunBtn">🔍 分析和谐度</button>
+      </div>
+      <div class="ai-result-box" id="aiResult"></div>
+      <div class="ai-status" id="aiStatus"></div>
+    </div>
+
+    <!-- ====== 运行日志 ====== -->
+    <div class="card" id="logCard" style="display:none;">
+      <div class="card-title"><span class="step-badge">📋</span> 运行日志</div>
+      <div class="log-area" id="logArea"></div>
+    </div>
+  </div>
+
+  <!-- 外部 JS（顺序不可变：kmeans.js 提供全局函数，app.js 依赖之） -->
+  <script src="kmeans.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
