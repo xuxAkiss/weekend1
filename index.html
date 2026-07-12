@@ -324,7 +324,7 @@
         <div class="ai-field">
           <label>API 地址</label>
           <input type="text" id="aiEndpoint"
-            value="https://api.closeai-asia.com/v1/chat/completions"
+            value="https://api.deepseek.com/v1/chat/completions"
             placeholder="https://api.xxx.com/v1/chat/completions">
         </div>
         <div class="ai-field">
@@ -333,10 +333,18 @@
         </div>
         <div class="ai-field">
           <label>模型</label>
-          <input type="text" id="aiModel" value="gpt-4o" placeholder="gpt-4o">
+          <input type="text" id="aiModel" value="deepseek-chat" placeholder="deepseek-chat">
         </div>
         <button class="btn btn-primary" id="aiRunBtn">🔍 分析和谐度</button>
       </div>
+      <p class="card-hint">
+        💡 也可使用其他兼容 OpenAI 接口的服务，如
+        <a href="#" onclick="document.getElementById('aiEndpoint').value='https://api.closeai-asia.com/v1/chat/completions';document.getElementById('aiModel').value='gpt-4o';return false;">CloseAI</a>
+        ·
+        <a href="#" onclick="document.getElementById('aiEndpoint').value='https://api.deepseek.com/v1/chat/completions';document.getElementById('aiModel').value='deepseek-chat';return false;">DeepSeek</a>
+        ·
+        <a href="#" onclick="document.getElementById('aiEndpoint').value='https://api.openai.com/v1/chat/completions';document.getElementById('aiModel').value='gpt-4o';return false;">OpenAI</a>
+      </p>
       <div class="ai-result-box" id="aiResult"></div>
       <div class="ai-status" id="aiStatus"></div>
     </div>
