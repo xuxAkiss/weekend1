@@ -297,7 +297,8 @@
     return {
       legend: {
         orient: "horizontal",
-        bottom: 10,
+        bottom: "2%",
+        type: "scroll",                // K 值较大时图例可滚动
         icon: "circle",
         textStyle: { fontSize: 13 }
       },
@@ -315,9 +316,9 @@
       series: [{
         name: "颜色聚类",
         type: "pie",
-        radius: ["40%", "72%"],
+        radius: ["35%", "50%"],        // 缩小半径，为标签和引导线留出环绕空间
         center: ["50%", "48%"],
-        avoidLabelOverlap: true,
+        avoidLabelOverlap: true,       // 防止标签重叠
         itemStyle: {
           borderRadius: 4,
           borderColor: "#fff",
@@ -347,7 +348,8 @@
     return {
       legend: {
         orient: "horizontal",
-        bottom: 10,
+        bottom: "2%",
+        type: "scroll",                // K 值较大时图例可滚动
         icon: "circle",
         textStyle: { fontSize: 13 }
       },
@@ -363,7 +365,8 @@
             "🔷 Hex：" + d._hex;
         }
       },
-      grid: { left: 50, right: 30, top: 20, bottom: 50 },
+      /* containLabel: true 确保坐标轴文字/标签完整包含，绝不裁切 */
+      grid: { top: "15%", bottom: "15%", containLabel: true },
       xAxis: {
         type: "category",
         data: pieData.map(function (d) { return d.name; }),
@@ -408,7 +411,8 @@
     return {
       legend: {
         orient: "horizontal",
-        bottom: 10,
+        bottom: "2%",
+        type: "scroll",                // K 值较大时图例可滚动
         icon: "circle",
         textStyle: { fontSize: 13 }
       },
@@ -426,7 +430,7 @@
       series: [{
         name: "颜色聚类",
         type: "pie",
-        radius: ["15%", "70%"],
+        radius: ["15%", "50%"],        // 缩小半径，为标签和引导线留出环绕空间
         center: ["50%", "48%"],
         roseType: "area",
         itemStyle: {
