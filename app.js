@@ -26,7 +26,7 @@
   var chartContainer = document.getElementById("chartContainer");
   var logCard        = document.getElementById("logCard");
   var logTitle       = document.getElementById("logTitle");
-  var logBody        = document.getElementById("logBody");
+  var logLabel       = document.getElementById("logLabel");
   var logArea        = document.getElementById("logArea");
   var aiCard         = document.getElementById("aiCard");
   var aiEndpoint     = document.getElementById("aiEndpoint");
@@ -55,7 +55,7 @@
   }
 
   function log(msg) {
-    logCard.style.display = "block";
+    // 消息始终写入缓冲区，卡片可见性由 runClustering() / 点击事件控制
     logArea.textContent += "[" + new Date().toLocaleTimeString() + "] " + msg + "\n";
     logArea.scrollTop = logArea.scrollHeight;
   }
@@ -149,10 +149,12 @@
   function runClustering() {
     if (!imageImageData) return;
 
-    // 清空并展开日志
+    // 显示日志卡片并展开内容
+    logCard.style.display = "block";
     logArea.textContent = "";
-    logTitle.classList.remove("collapsed");
-    logBody.classList.remove("hidden");
+    logArea.style.display = "block";
+    logTitle.classList.add("expanded");
+    logLabel.textContent = "运行日志";
     resultBody.innerHTML = "";
     aiResult.textContent = "";
     aiStatus.textContent = "";
@@ -611,8 +613,15 @@
 
   // ==================== 日志折叠 ====================
   logTitle.addEventListener("click", function () {
-    var collapsed = logTitle.classList.toggle("collapsed");
-    logBody.classList.toggle("hidden", collapsed);
+    if (logArea.style.display === "none") {
+      logArea.style.display = "block";
+      logTitle.classList.add("expanded");
+      logLabel.textContent = "运行日志";
+    } else {
+      logArea.style.display = "none";
+      logTitle.classList.remove("expanded");
+      logLabel.textContent = "运行日志（点击展开）";
+    }
   });
 
   // ==================== 窗口 resize ====================
